@@ -1,0 +1,17 @@
+# Artefatos de implementações Common Lisp
+*.fasl
+*.fas
+*.fasc
+*.lib
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Caches, temporários e editores
+.cache/
+*~
+.#*
+.DS_Store
