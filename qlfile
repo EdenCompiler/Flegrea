@@ -8,7 +8,7 @@ ql zpng
 ql cl-jpeg
 ql chipz
 ql babel
-ql com.inuoe.jzon
+ql jzon
 ql qbase64
 ql flexi-streams
 ql fiveam
