@@ -92,7 +92,10 @@
                (not (eq (%thread-dono-do-alvo alvo) (bt:current-thread))))
       (error 'renderer-error :message "O render-target precisa ser descartado no thread proprietário."))
     (when (%textura-gl-do-alvo alvo) (gl:delete-texture (%textura-gl-do-alvo alvo)))
-    (when (%profundidade-gl-do-alvo alvo) (gl:delete-renderbuffer (%profundidade-gl-do-alvo alvo)))
+    ;; A função singular de cl-opengl aloca zero GLuints em algumas versões;
+    ;; a forma plural evita a escrita fora do limite observada no ECL.
+    (when (%profundidade-gl-do-alvo alvo)
+      (gl:delete-renderbuffers (vector (%profundidade-gl-do-alvo alvo))))
     (when (%framebuffer-do-alvo alvo) (gl:delete-framebuffer (%framebuffer-do-alvo alvo)))
     (dispose (target-color-texture alvo))
     (when (target-depth-texture alvo) (dispose (target-depth-texture alvo))))
