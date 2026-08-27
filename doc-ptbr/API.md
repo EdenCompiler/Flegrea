@@ -1,4 +1,4 @@
-# Guia da API Flegrea 1.0
+# Guia da API Flegrea 1.5
 
 ## Convenções e condições
 
@@ -76,6 +76,24 @@ Os construtores de luz são `make-ambient-light`, `make-directional-light` e `ma
 - `dispose` libera todos os recursos controlados pelo renderer.
 
 `animation-loop` é um alias explícito de `animate`. As dimensões são atualizadas pelo framebuffer e expostas por `renderer-width` e `renderer-height`; o título configurado está em `renderer-title`.
+
+Registre animação e controles gerenciados pelo loop com `add-animation-mixer` / `remove-animation-mixer` e `add-controls` / `remove-controls`. Cada quadro consulta entrada, drena jobs e hot reload, executa `before-update`, controles, mixers, `update`, bindings metagráficos, callback do usuário e `after-update` antes da renderização.
+
+## Tipos de cena e renderização da 1.5
+
+Os drawables adicionais são `line`, `line-segments`, `points`, `sprite` e `instanced-mesh`. Seus construtores acompanham o nome da classe; use `set-instance-matrix` e `set-instance-color` para dados por instância. As primitivas incluem circle, ring, cylinder, cone, torus, capsule, edges e wireframe geometry. Grupos e faixas de desenho usam `add-group`, `clear-groups` e `set-draw-range`.
+
+`mesh-physical-material` acrescenta `clearcoat`, `transmission`, `thickness`, `ior`, atenuação e seus mapas. Materiais standard expõem intensidade emissiva, escala de normal, força de oclusão e mapas base/normal/metálico-rugoso/emissivo/oclusão/opacidade. Materiais normal e depth são visões diagnósticas. Luzes spot e hemisphere complementam as três originais; `light-shadow` configura tamanho do mapa e bias de profundidade/normal.
+
+Texturas são objetos `resource` criados por `make-texture`, `make-data-texture` ou `load-texture`. Marque `needs-update` depois de alterar dados de textura ou de um atributo de buffer já enviado. Render targets e pós-processamento usam `make-render-target`, `make-effect-composer`, passes de render/shader, `composer-render` e `make-fxaa-pass`.
+
+## Assets, animação, picking e glTF
+
+`loading-manager` fornece jobs assíncronos, deduplicação, remoção de cache, cancelamento, progresso, listeners e resolvedores explícitos de URI. Use `load-texture-async` ou `load-gltf-async`; chame `drain-loading-manager` na thread de renderização quando não usar o loop de animação da Flegrea.
+
+Animação combina keyframe tracks, clips, mixer e actions. Actions oferecem play/pause/stop/seek, loops repeat/once/ping-pong, peso, escala de tempo e cross-fade. `raycaster` intersecta meshes, instâncias, pontos, linhas e sprites e devolve objetos `intersection` ordenados por distância; acertos em meshes incluem normal da face em espaço mundial e UV interpolada. `orbit-controls` consome o `input-state` do renderer: arraste esquerdo gira, direito ou central faz pan e a roda faz dolly, com damping, limites de distância e limites polares.
+
+`load-gltf` e `load-gltf-async` devolvem `scene-asset`. `instantiate-asset` aceita `:scene` e `:variant`; readers de metadados expõem cenas, câmeras, variantes, avisos e a descrição canônica da importação. Consulte [glTF 2.0](GLTF-2.0.md).
 
 ## Metagrafo
 

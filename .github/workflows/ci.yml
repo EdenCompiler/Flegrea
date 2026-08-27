@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main, release/1.5]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lisp: [sbcl-bin, ecl, ccl-bin]
+    env:
+      LISP: ${{ matrix.lisp }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar OpenGL, GLFW e X virtual
+        run: sudo apt-get update && sudo apt-get install -y libglfw3 libglfw3-dev libgl1-mesa-dev libffi-dev mesa-utils xauth xvfb
+      - uses: 40ants/setup-lisp@v4
+        with:
+          asdf-system: flegrea
+      - name: Testes unitários
+        uses: 40ants/run-tests@v2
+        with:
+          asdf-system: flegrea
+      - name: Testes OpenGL em Mesa
+        shell: lispsh -eo pipefail {0}
+        run: xvfb-run -a env LIBGL_ALWAYS_SOFTWARE=1 FLEGREA_RUN_GL_TESTS=1 qlot exec ros -s flegrea -e '(asdf:test-system :flegrea)' -q
+      - name: Smoke dos dois demos
+        shell: lispsh -eo pipefail {0}
+        run: |
+          for demo in cubo oceano; do
+            xvfb-run -a env LIBGL_ALWAYS_SOFTWARE=1 qlot exec ros -L $LISP run --load "demos/$demo.lisp" -- --smoke
+          done

@@ -4,15 +4,7 @@
 
 Flegrea separates a declarative metagraph from the live CLOS scene graph. The metagraph is durable program data: it can be inspected, rewritten, serialized, compared, and committed. The live graph owns mutable transforms and renderable resources.
 
-The serial ASDF load order is:
-
-1. `package.lisp` defines the public package and private subsystem packages;
-2. `matematica.lisp` provides independent numerical primitives;
-3. `nucleo.lisp` implements the scene hierarchy and cameras;
-4. `geometrias.lisp` provides CPU-side vertex/index data;
-5. `materiais.lisp` defines materials and lights;
-6. `metagrafo.lisp` parses, validates, instantiates, updates, and persists descriptions;
-7. `renderizador.lisp` owns GLFW, OpenGL, GPU caches, drawing, input, and loops.
+The ASDF graph is split into `flegrea/core`, `flegrea/assets`, `flegrea/animation`, `flegrea/controls`, `flegrea/renderer`, `flegrea/postprocessing`, and `flegrea/gltf`. The umbrella `flegrea` system loads them all. Core has no windowing or image-decoder dependency; assets extends its metagraph resource factory without introducing a circular dependency.
 
 Only `flegrea` is a public API package. The subsystem packages organize implementation dependencies without requiring callers to assemble several packages.
 
@@ -45,16 +37,16 @@ Each `object-3d` owns mutable `position`, `rotation`, and `scale` values plus `m
 
 ## Ownership and lifetime
 
-CPU geometry, materials, and scene objects are ordinary Lisp objects. The renderer lazily creates VAOs, vertex buffers, index buffers, and custom shader programs, caching them by object identity. `dispose` releases the entire renderer-owned GPU cache, built-in programs, context, and window.
+CPU geometry, materials, and scene objects are ordinary Lisp objects. The renderer lazily creates VAOs, vertex/index/instance buffers, textures, shadow targets, and custom shader programs, caching them by object identity. `dispose` releases the entire renderer-owned GPU cache, built-in programs, context, and window.
 
 Use `unwind-protect` around every renderer lifetime. `dispose` is idempotent, but using a disposed renderer or using it from another thread signals `renderer-error`.
 
 ## Extension points
 
-`register-node-class` adds a typed metagraph node contract. Extension code can specialize `validate-node`, `instantiate-node`, `update-node`, and `dispose-node`. Stable node IDs allow `commit-scene` to preserve compatible live objects while replacing nodes whose declared type changes.
+`register-node-class` adds a typed metagraph node contract. Extension code can specialize `validate-node`, `instantiate-node`, `update-node`, and `dispose-node`. Stable node IDs allow `commit-scene` to preserve compatible live objects while replacing nodes whose declared type changes, or instanced meshes whose fixed instance count changes.
 
 The renderer currently recognizes the built-in geometry attribute semantics and material classes. Arbitrary visual effects are supported through `shader-material`; adding an entirely new renderer resource category still requires an extension to the renderer implementation.
 
 ## Boundaries
 
-The 1.0 renderer is a compact forward renderer. It deliberately omits render queues, transparency sorting, textures, shadows, instancing, culling, model import, post-processing, physics, audio, and editor services. These boundaries keep the first metagraph and native-window contract small enough to validate across Lisp implementations.
+The 1.5 renderer is a compact forward renderer with stable opaque/transparent queues, frustum culling, textures, instancing, glTF import, and an explicit post-processing pipeline. Physics, audio, editor services, cascaded shadows, and advanced image-based lighting remain outside this release.

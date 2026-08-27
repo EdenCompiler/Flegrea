@@ -2,9 +2,9 @@
 
 ## Requisitos
 
-Flegrea 1.0 requer uma implementação Common Lisp nativa, ASDF, Quicklisp, driver OpenGL 3.3 funcional e GLFW 3. A base suportada inclui SBCL e ECL. O código usa recursos portáveis de ASDF/UIOP, CFFI e Bordeaux Threads para viabilizar CCL sem ramificações específicas de implementação.
+Flegrea 1.5 requer uma implementação Common Lisp nativa, ASDF, Quicklisp, driver OpenGL 3.3 funcional e GLFW 3. A base suportada inclui SBCL e ECL. O código usa recursos portáveis de ASDF/UIOP, CFFI e Bordeaux Threads para viabilizar CCL sem ramificações específicas de implementação.
 
-As dependências ASDF são `alexandria`, `cffi`, `cl-glfw3`, `cl-opengl`, `bordeaux-threads` e `float-features`. O sistema `flegrea/tests` também usa FiveAM.
+O conjunto completo de dependências está em `qlfile`: Alexandria, Bordeaux Threads, CFFI, cl-glfw3, cl-opengl, float-features, zpng, cl-jpeg, chipz, Babel, com.inuoe.jzon, qbase64, flexi-streams e FiveAM para testes.
 
 No Debian ou Ubuntu:
 
@@ -48,9 +48,10 @@ ecl --load demos/oceano.lisp
 
 Os dois arquivos inicializam ASDF e Quicklisp em relação ao próprio caminho e abrem imediatamente uma janela nativa. Nenhum canvas ou aplicativo hospedeiro é necessário.
 
-O oceano possui um modo de fumaça não interativo:
+Os dois demos possuem modo de fumaça não interativo:
 
 ```sh
+sbcl --load demos/cubo.lisp -- --smoke
 sbcl --load demos/oceano.lisp -- --smoke
 ```
 
@@ -80,4 +81,5 @@ Em CI Linux sem servidor gráfico, execute o comando OpenGL por `xvfb-run -a` e 
 - O renderer e todo trabalho OpenGL precisam permanecer na thread que chamou `make-renderer`.
 - Flegrea mascara traps de ponto flutuante do host ao redor de GLFW/OpenGL, pois drivers gráficos nativos podem executar operações incompatíveis com a configuração de traps da implementação.
 - GLFW é carregado dinamicamente por CFFI. Se a carga falhar, verifique a instalação da biblioteca da plataforma e sua visibilidade ao carregador dinâmico.
-- Windows e macOS exigem seus pré-requisitos normais de GLFW/OpenGL. São alvos de portabilidade, não combinações validadas na versão 1.0.
+- CCL é exercitado pela CI; ele não está instalado em toda máquina de desenvolvimento.
+- Windows e macOS exigem seus pré-requisitos normais de GLFW/OpenGL. São alvos de portabilidade, não combinações validadas na versão 1.5.

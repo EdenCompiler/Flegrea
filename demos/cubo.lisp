@@ -25,15 +25,15 @@
      :id :geometria-cubo
      :width 1.7 :height 1.7 :depth 1.7
      :face-colors
-     ((flegrea:vector3 0.95 0.18 0.22)
-      (flegrea:vector3 0.12 0.65 0.95)
-      (flegrea:vector3 0.22 0.85 0.42)
-      (flegrea:vector3 0.96 0.70 0.12)
-      (flegrea:vector3 0.64 0.30 0.92)
-      (flegrea:vector3 0.95 0.42 0.12)))
+     ((flegrea:color 0.95 0.18 0.22)
+      (flegrea:color 0.12 0.65 0.95)
+      (flegrea:color 0.22 0.85 0.42)
+      (flegrea:color 0.96 0.70 0.12)
+      (flegrea:color 0.64 0.30 0.92)
+      (flegrea:color 0.95 0.42 0.12)))
     (flegrea:mesh-standard-material
      :id :material-cubo
-     :color (flegrea:vector3 1 1 1)
+     :color (flegrea:color 1 1 1)
      :roughness 0.32
      :metalness 0.18
      :vertex-colors t))
@@ -45,17 +45,17 @@
     (flegrea:group :id :alvo)
     (flegrea:ambient-light
      :id :luz-ambiente
-     :color (flegrea:vector3 0.55 0.62 0.78)
+     :color (flegrea:color 0.55 0.62 0.78)
      :intensity 0.22)
     (flegrea:directional-light
      :id :luz-direcional
-     :color (flegrea:vector3 1 0.88 0.72)
+     :color (flegrea:color 1 0.88 0.72)
      :intensity 2.4
      :target (flegrea:ref :alvo)
      :position (flegrea:vector3 3 4 5))
     (flegrea:point-light
      :id :luz-pontual
-     :color (flegrea:vector3 0.28 0.52 1)
+     :color (flegrea:color 0.28 0.52 1)
      :intensity 18
      :distance 12 :decay 2
      :position (flegrea:vector3 -3 -1 3))
@@ -74,9 +74,9 @@
   (let* ((teste-fumaca (member "--smoke" (uiop:command-line-arguments) :test #'string=))
          (renderizador (flegrea:make-renderer
                         :width 960 :height 720
-                        :title "Flegrea 1.0 — Cubo metagráfico"
+                        :title "Flegrea 1.5 — Cubo metagráfico"
                         :visible (not teste-fumaca) :vsync (not teste-fumaca)
-                        :clear-color (flegrea:make-vector3 0.018 0.022 0.04)))
+                        :clear-color (flegrea:make-color 0.018 0.022 0.04)))
          (instancia (criar-cubo-girando))
          (quadros 0))
     (unwind-protect

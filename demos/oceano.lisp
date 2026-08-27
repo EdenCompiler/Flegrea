@@ -229,9 +229,9 @@ void main(){
 (defun executar-oceano ()
   (let* ((teste-fumaca (member "--smoke" (uiop:command-line-arguments) :test #'string=))
          (renderizador (flegrea:make-renderer
-                        :width 1120 :height 720 :title "Flegrea 1.0 — Oceano"
+                        :width 1120 :height 720 :title "Flegrea 1.5 — Oceano"
                         :visible (not teste-fumaca) :vsync (not teste-fumaca)
-                        :clear-color (flegrea:make-vector3 0.34 0.48 0.61)))
+                        :clear-color (flegrea:make-color 0.34 0.48 0.61)))
          (instancia (criar-cena-oceano))
          (camera (flegrea:instance-camera instancia))
          (camera-x 0.0f0)

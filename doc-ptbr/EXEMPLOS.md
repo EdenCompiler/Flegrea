@@ -13,7 +13,7 @@ Troque `sbcl` por `ecl` para usar ECL. Os dois exemplos carregam Quicklisp, regi
 
 ## Cubo metagráfico
 
-`demos/cubo.lisp` é a menor demonstração completa do desenho 1.0. Sua forma `define-scene` declara:
+`demos/cubo.lisp` é a menor demonstração completa do desenho 1.5. Sua forma `define-scene` declara:
 
 - uma caixa com seis cores por face;
 - um material metálico/rugoso que usa essas cores de vértice;

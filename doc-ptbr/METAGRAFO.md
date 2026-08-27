@@ -18,7 +18,7 @@ Cada nó é uma lista tipada com `:id` keyword único. Uma cena declara `:active
    :resources
    ((flegrea:box-geometry :id :geometria)
     (flegrea:mesh-basic-material
-     :id :material :color (flegrea:vector3 0.1 0.6 1.0)))
+     :id :material :color (flegrea:color 0.1 0.6 1.0)))
    :children
    ((flegrea:perspective-camera
      :id :camera :position (flegrea:vector3 0 0 4))
@@ -27,7 +27,7 @@ Cada nó é uma lista tipada com `:id` keyword único. Uma cena declara `:active
      :material (flegrea:ref :material)))))
 ```
 
-Os tipos internos de objeto são `scene`, `group`, `mesh`, as duas câmeras e as três luzes. Os tipos de recurso são as quatro geometrias e os três materiais. `ref` conecta IDs e é validado antes da instanciação.
+Os nós de objeto cobrem cenas, grupos, meshes, meshes instanciadas, linhas, segmentos, pontos, sprites, as duas câmeras e luzes ambiente/direcional/pontual/spot/hemisférica. Propriedades comuns incluem transformações, visibilidade, camadas, ordem de renderização, corte por frustum e participação em sombras; meshes instanciadas aceitam matrizes e cores. Recursos incluem geometrias buffer e primitivas, derivados edges/wireframe, materiais basic/standard/physical/normal/depth/line/points/sprite/shader e data textures transformáveis. Referências entre recursos são instanciadas em ordem de dependência; ciclos são rejeitados. `ref` conecta IDs e é validado antes da instanciação.
 
 ## Bindings
 
@@ -56,7 +56,7 @@ Os readers públicos `node-id`, `node-type`, `node-properties` e `node-children`
 
 `commit-scene instance description` prepara e valida uma substituição e então a reconcilia por ID estável e tipo declarado. Objetos compatíveis mantêm sua identidade e recebem o novo estado. Tipos alterados criam objetos substitutos. Nós removidos invocam `dispose-node`, arestas da hierarquia são refeitas, referências de recursos das malhas são reparadas e a câmera ativa é atualizada.
 
-Isso é sincronização estrutural, não uma transação concorrente. Faça a chamada na mesma thread da aplicação, entre quadros.
+O grafo substituto é interpretado, validado e totalmente instanciado antes da reconciliação do grafo vivo. Recursos compatíveis preservam identidade; texturas alteradas são marcadas para novo upload na GPU; recursos removidos são descartados. A operação deve ocorrer na thread de aplicação/renderização, entre quadros, e não concorrentemente.
 
 ## Persistência
 
@@ -66,4 +66,4 @@ Strings de shaders e arrays de buffers próprios são serializáveis, mas geomet
 
 ## Extensões
 
-`register-node-class` registra tag, classe de metadado, propriedades permitidas, propriedades bindable, política de filhos e condição de recurso. Especialize `validate-node`, `instantiate-node`, `update-node` e `dispose-node` para comportamento próprio. Métodos de extensão recebem um contexto tratado como opaco na versão 1.0; use os accessors documentados dos nós e construtores públicos de runtime.
+`register-node-class` registra tag, classe de metadado, propriedades permitidas, propriedades bindable, política de filhos e condição de recurso. Especialize `validate-node`, `instantiate-node`, `update-node` e `dispose-node` para comportamento próprio. Métodos de extensão recebem um contexto tratado como opaco na versão 1.5; use os accessors documentados dos nós e construtores públicos de runtime.

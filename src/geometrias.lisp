@@ -7,9 +7,14 @@
    (usage :initarg :usage :initform :static-draw :accessor usage)
    (needs-update :initarg :needs-update :initform t :accessor needs-update)))
 
-(defclass buffer-geometry ()
+(defclass buffer-geometry (flegrea:resource)
   ((attributes :initform (make-hash-table :test #'eq) :accessor attributes)
-   (index :initform nil :accessor index)))
+   (index :initform nil :accessor index)
+   (grupos :initform nil :accessor flegrea:geometry-groups)
+   (intervalo-de-desenho :initform (cons 0 nil) :accessor flegrea:draw-range)
+   (modo-primitivo :initarg :primitive-mode :initform :triangles :accessor flegrea:primitive-mode)
+   (caixa-limite :initform nil :accessor flegrea:bounding-box)
+   (esfera-limite :initform nil :accessor flegrea:bounding-sphere)))
 (defclass box-geometry (buffer-geometry) ())
 (defclass sphere-geometry (buffer-geometry) ())
 (defclass plane-geometry (buffer-geometry) ())
@@ -62,8 +67,9 @@
   geometry)
 
 (defun %validar-cor (cor)
-  (unless (and (typep cor 'vector3) (<= 0 (x cor) 1) (<= 0 (y cor) 1) (<= 0 (z cor) 1))
-    (error 'validation-error :message "Cada cor deve ser vector3 sRGB com componentes entre zero e um."))
+  (unless (or (typep cor 'flegrea:color)
+              (and (typep cor 'vector3) (<= 0 (x cor) 1) (<= 0 (y cor) 1) (<= 0 (z cor) 1)))
+    (error 'validation-error :message "Cada cor deve ser uma instância de color."))
   cor)
 
 (defun make-box-geometry (&key (width 1.0f0) (height 1.0f0) (depth 1.0f0) face-colors)
@@ -87,19 +93,27 @@
                    -1 0 0  -1 0 0  -1 0 0  -1 0 0
                    0 1 0  0 1 0  0 1 0  0 1 0
                    0 -1 0  0 -1 0  0 -1 0  0 -1 0))
+         (uvs (vector 0 0  1 0  1 1  0 1
+                      0 0  1 0  1 1  0 1
+                      0 0  1 0  1 1  0 1
+                      0 0  1 0  1 1  0 1
+                      0 0  1 0  1 1  0 1
+                      0 0  1 0  1 1  0 1))
          (indices (loop for face below 6 append
                     (let ((base (* face 4))) (list base (1+ base) (+ base 2) base (+ base 2) (+ base 3)))))
          (geometria (make-instance 'box-geometry)))
     (set-attribute geometria :position (make-buffer-attribute posicoes 3))
     (set-attribute geometria :normal (make-buffer-attribute normais 3))
+    (set-attribute geometria :uv (make-buffer-attribute uvs 2))
     (set-index geometria indices)
     (when face-colors
       (let ((cores (make-array 72 :element-type 'single-float)) (cursor 0))
         (dolist (cor face-colors)
           (%validar-cor cor)
           (loop repeat 4 do
-            (setf (aref cores cursor) (x cor) (aref cores (1+ cursor)) (y cor)
-                  (aref cores (+ cursor 2)) (z cor))
+            (setf (aref cores cursor) (if (typep cor 'flegrea:color) (flegrea:color-r cor) (x cor))
+                  (aref cores (1+ cursor)) (if (typep cor 'flegrea:color) (flegrea:color-g cor) (y cor))
+                  (aref cores (+ cursor 2)) (if (typep cor 'flegrea:color) (flegrea:color-b cor) (z cor)))
             (incf cursor 3)))
         (set-attribute geometria :color (make-buffer-attribute cores 3))))
     geometria))
@@ -109,13 +123,15 @@
   (unless (and (> width 0) (> height 0) (plusp width-segments) (plusp height-segments)
                (integerp width-segments) (integerp height-segments))
     (error 'validation-error :message "Os parâmetros do plano são inválidos."))
-  (let ((posicoes nil) (normais nil) (indices nil) (geometria (make-instance 'plane-geometry)))
+  (let ((posicoes nil) (normais nil) (uvs nil) (indices nil) (geometria (make-instance 'plane-geometry)))
     (dotimes (linha (1+ height-segments))
       (dotimes (coluna (1+ width-segments))
         (let ((px (- (* width (/ coluna width-segments)) (/ width 2.0f0)))
               (py (- (/ height 2.0f0) (* height (/ linha height-segments)))))
           (setf posicoes (nconc posicoes (list px py 0.0f0))
-                normais (nconc normais (list 0.0f0 0.0f0 1.0f0))))))
+                normais (nconc normais (list 0.0f0 0.0f0 1.0f0))
+                uvs (nconc uvs (list (/ coluna width-segments)
+                                      (- 1.0f0 (/ linha height-segments))))))))
     (dotimes (linha height-segments)
       (dotimes (coluna width-segments)
         (let* ((a (+ coluna (* linha (1+ width-segments)))) (b (+ a (1+ width-segments)))
@@ -123,6 +139,7 @@
           (setf indices (nconc indices (list a b d b c d))))))
     (set-attribute geometria :position (make-buffer-attribute posicoes 3))
     (set-attribute geometria :normal (make-buffer-attribute normais 3))
+    (set-attribute geometria :uv (make-buffer-attribute uvs 2))
     (set-index geometria indices) geometria))
 
 (defun make-sphere-geometry (&key (radius 1.0f0) (width-segments 32) (height-segments 16))
@@ -130,14 +147,15 @@
   (unless (and (> radius 0) (integerp width-segments) (>= width-segments 3)
                (integerp height-segments) (>= height-segments 2))
     (error 'validation-error :message "Os parâmetros da esfera são inválidos."))
-  (let ((posicoes nil) (normais nil) (indices nil) (geometria (make-instance 'sphere-geometry)))
+  (let ((posicoes nil) (normais nil) (uvs nil) (indices nil) (geometria (make-instance 'sphere-geometry)))
     (dotimes (linha (1+ height-segments))
       (let ((v (/ linha height-segments)))
         (dotimes (coluna (1+ width-segments))
           (let* ((u (/ coluna width-segments)) (phi (* u 2 pi)) (theta (* v pi))
                  (nx (* -1 (cos phi) (sin theta))) (ny (cos theta)) (nz (* (sin phi) (sin theta))))
             (setf posicoes (nconc posicoes (list (* radius nx) (* radius ny) (* radius nz)))
-                  normais (nconc normais (list nx ny nz)))))))
+                  normais (nconc normais (list nx ny nz))
+                  uvs (nconc uvs (list u (- 1.0f0 v))))))))
     (dotimes (linha height-segments)
       (dotimes (coluna width-segments)
         (let* ((a (+ coluna (* linha (1+ width-segments)))) (b (+ a (1+ width-segments)))
@@ -146,6 +164,7 @@
           (unless (= linha (1- height-segments)) (setf indices (nconc indices (list b c d)))))))
     (set-attribute geometria :position (make-buffer-attribute posicoes 3))
     (set-attribute geometria :normal (make-buffer-attribute normais 3))
+    (set-attribute geometria :uv (make-buffer-attribute uvs 2))
     (set-index geometria indices) geometria))
 
 (defun compute-vertex-normals (geometry)

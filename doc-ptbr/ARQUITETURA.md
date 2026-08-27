@@ -4,15 +4,7 @@
 
 Flegrea separa um metagrafo declarativo do grafo de cena CLOS vivo. O metagrafo é dado durável do programa: pode ser inspecionado, reescrito, serializado, comparado e aplicado. O grafo vivo mantém transformações mutáveis e recursos renderizáveis.
 
-A ordem serial de carga do ASDF é:
-
-1. `package.lisp` define o pacote público e os pacotes privados dos subsistemas;
-2. `matematica.lisp` fornece primitivas numéricas independentes;
-3. `nucleo.lisp` implementa a hierarquia da cena e as câmeras;
-4. `geometrias.lisp` fornece dados de vértices e índices na CPU;
-5. `materiais.lisp` define materiais e luzes;
-6. `metagrafo.lisp` interpreta, valida, instancia, atualiza e persiste descrições;
-7. `renderizador.lisp` controla GLFW, OpenGL, caches GPU, desenho, entrada e loops.
+O grafo ASDF é dividido em `flegrea/core`, `flegrea/assets`, `flegrea/animation`, `flegrea/controls`, `flegrea/renderer`, `flegrea/postprocessing` e `flegrea/gltf`. O sistema agregador `flegrea` carrega todos. Core não depende de janela nem de decodificadores de imagem; assets estende sua factory de recursos metagráficos sem criar dependência circular.
 
 Somente `flegrea` é pacote de API pública. Os pacotes de subsistema organizam dependências internas sem obrigar o chamador a combinar vários pacotes.
 
@@ -45,16 +37,16 @@ Cada `object-3d` possui valores mutáveis de `position`, `rotation` e `scale`, a
 
 ## Ownership e vida útil
 
-Geometrias de CPU, materiais e objetos de cena são objetos Lisp comuns. O renderer cria sob demanda VAOs, buffers de vértices, buffers de índices e programas customizados, guardando-os por identidade de objeto. `dispose` libera todo o cache GPU do renderer, programas internos, contexto e janela.
+Geometrias de CPU, materiais e objetos de cena são objetos Lisp comuns. O renderer cria sob demanda VAOs, buffers de vértices/índices/instâncias, texturas, alvos de sombra e programas customizados, guardando-os por identidade de objeto. `dispose` libera todo o cache GPU do renderer, programas internos, contexto e janela.
 
 Use `unwind-protect` ao redor de toda vida útil do renderer. `dispose` é idempotente, mas usar um renderer descartado ou chamá-lo de outra thread sinaliza `renderer-error`.
 
 ## Pontos de extensão
 
-`register-node-class` adiciona um contrato tipado de nó metagráfico. Extensões podem especializar `validate-node`, `instantiate-node`, `update-node` e `dispose-node`. IDs estáveis permitem que `commit-scene` preserve objetos compatíveis e substitua nós cujo tipo declarado mudou.
+`register-node-class` adiciona um contrato tipado de nó metagráfico. Extensões podem especializar `validate-node`, `instantiate-node`, `update-node` e `dispose-node`. IDs estáveis permitem que `commit-scene` preserve objetos compatíveis e substitua nós cujo tipo declarado mudou, ou meshes instanciadas cuja contagem fixa mudou.
 
 O renderer reconhece as semânticas internas de atributos geométricos e as classes de material. Efeitos visuais arbitrários são possíveis por `shader-material`; uma categoria inteiramente nova de recurso ainda exige uma extensão do renderer.
 
 ## Limites
 
-O renderer 1.0 é um renderer forward compacto. Ele omite deliberadamente filas de renderização, ordenação de transparência, texturas, sombras, instancing, culling, importação de modelos, pós-processamento, física, áudio e serviços de editor. Esses limites mantêm pequeno o contrato inicial entre metagrafo e janela nativa para que ele possa ser validado em mais de uma implementação Lisp.
+O renderer 1.5 é um renderer forward compacto com filas estáveis de opacos e transparentes, culling por frustum, texturas, instancing, importação glTF e pipeline explícito de pós-processamento. Física, áudio, serviços de editor, sombras em cascata e iluminação avançada baseada em imagem permanecem fora desta versão.

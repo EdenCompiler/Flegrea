@@ -13,7 +13,7 @@ Replace `sbcl` with `ecl` to use ECL. Both examples load Quicklisp, register the
 
 ## Metagraph cube
 
-`demos/cubo.lisp` is the smallest complete demonstration of the 1.0 design. Its `define-scene` form declares:
+`demos/cubo.lisp` is the smallest complete demonstration of the 1.5 design. Its `define-scene` form declares:
 
 - one box resource with six per-face colors;
 - one metallic/roughness material using those vertex colors;

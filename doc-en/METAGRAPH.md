@@ -18,7 +18,7 @@ Every node is a typed list with a unique keyword `:id`. A scene declares `:activ
    :resources
    ((flegrea:box-geometry :id :geometry)
     (flegrea:mesh-basic-material
-     :id :material :color (flegrea:vector3 0.1 0.6 1.0)))
+     :id :material :color (flegrea:color 0.1 0.6 1.0)))
    :children
    ((flegrea:perspective-camera
      :id :camera :position (flegrea:vector3 0 0 4))
@@ -27,7 +27,7 @@ Every node is a typed list with a unique keyword `:id`. A scene declares `:activ
      :material (flegrea:ref :material)))))
 ```
 
-Built-in object node types are `scene`, `group`, `mesh`, both camera types, and all three light types. Resource node types are the four geometry types and three material types. `ref` connects IDs and is validated before instantiation.
+Built-in object nodes cover scenes, groups, meshes, instanced meshes, lines, line segments, points, sprites, both cameras, and ambient/directional/point/spot/hemisphere lights. Shared object properties include transforms, visibility, layers, render order, frustum culling, and shadow participation; instanced meshes accept matrices and colors. Resources cover buffer and primitive geometries, edge/wireframe derivatives, basic/standard/physical/normal/depth/line/points/sprite/shader materials, and transformable data textures. Resource references are instantiated in dependency order; cycles are rejected. `ref` connects IDs and is validated before instantiation.
 
 ## Bindings
 
@@ -56,7 +56,7 @@ The public node readers `node-id`, `node-type`, `node-properties`, and `node-chi
 
 `commit-scene instance description` prepares and validates a replacement, then reconciles it by stable ID and declared type. Compatible objects keep their identity and receive updated state. Changed types create replacement objects. Removed nodes invoke `dispose-node`, hierarchy edges are rebuilt, mesh resource links are repaired, and the active camera is refreshed.
 
-This is structural synchronization, not a concurrent transaction. Call it on the same application thread between frames.
+The replacement graph is parsed, validated, and fully instantiated before the live graph is reconciled. Compatible resources preserve identity; changed textures are marked for GPU re-upload; removed resources are disposed. The operation is intended for the application/render thread between frames, not concurrent mutation.
 
 ## Persistence
 
@@ -66,4 +66,4 @@ Shader source strings and custom buffer arrays are serializable, but large gener
 
 ## Extensions
 
-`register-node-class` records a tag, metadata class, allowed properties, bindable properties, child policy, and resource status. Specialize `validate-node`, `instantiate-node`, `update-node`, and `dispose-node` for custom behavior. Extension methods receive a context object intentionally treated as opaque in 1.0; use documented node accessors and public runtime constructors.
+`register-node-class` records a tag, metadata class, allowed properties, bindable properties, child policy, and resource status. Specialize `validate-node`, `instantiate-node`, `update-node`, and `dispose-node` for custom behavior. Extension methods receive a context object intentionally treated as opaque in 1.5; use documented node accessors and public runtime constructors.
