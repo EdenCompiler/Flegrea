@@ -32,5 +32,5 @@ jobs:
         shell: lispsh -eo pipefail {0}
         run: |
           for demo in cubo oceano; do
-            xvfb-run -a env LIBGL_ALWAYS_SOFTWARE=1 qlot exec ros -L $LISP run --load "demos/$demo.lisp" -- --smoke
+            xvfb-run -a env LIBGL_ALWAYS_SOFTWARE=1 FLEGREA_TESTE_FUMACA=1 qlot exec ros -L "$LISP" run --load "demos/$demo.lisp"
           done

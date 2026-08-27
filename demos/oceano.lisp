@@ -227,7 +227,9 @@ void main(){
           :material (flegrea:ref :material-ceu))))))))
 
 (defun executar-oceano ()
-  (let* ((teste-fumaca (member "--smoke" (uiop:command-line-arguments) :test #'string=))
+  (let* ((teste-fumaca (or (uiop:getenv "FLEGREA_TESTE_FUMACA")
+                           (member "--smoke" (uiop:command-line-arguments)
+                                   :test #'string=)))
          (renderizador (flegrea:make-renderer
                         :width 1120 :height 720 :title "Flegrea 1.5 — Oceano"
                         :visible (not teste-fumaca) :vsync (not teste-fumaca)
